@@ -1,0 +1,15 @@
+{
+  "id": "./",
+  "name": "Simon — Follow the Glow",
+  "short_name": "Simon",
+  "description": "A colorful memory game with daily challenges, endless play, and two-player mode.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#101419",
+  "theme_color": "#101419",
+  "icons": [
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

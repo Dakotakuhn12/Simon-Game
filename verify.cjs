@@ -1,0 +1,15 @@
+const vm=require('vm'),fs=require('fs'),assert=require('assert/strict');
+const el=()=>({checked:false,disabled:false,hidden:false,open:false,value:'normal',selectedIndex:0,options:[{value:'dark',text:'Classic'},{value:'classic'},{value:'normal'}],style:{},classList:{add(){},remove(){},toggle(){}},events:{},setAttribute(){},addEventListener(k,f){this.events[k]=f},append(){},replaceChildren(){},close(){this.open=false},showModal(){this.open=true}});
+const n={},p=Array.from({length:4},el),store={};const c=vm.createContext({document:{body:{dataset:{},classList:{add(){},remove(){},toggle(){}}},querySelector:k=>n[k]??=el(),querySelectorAll:()=>p,createElement:el,addEventListener(){}},localStorage:{getItem:k=>store[k],setItem:(k,v)=>store[k]=v},window:{},setTimeout,Math,Date});
+vm.runInContext(fs.readFileSync('index.js','utf8').replace(/const wait = async ms => \{[\s\S]*?\n\};/, 'const wait = async () => {};'),c);const r=s=>vm.runInContext(s,c);
+(async()=>{
+ n['#mode'].value='classic';n['#on'].checked=true;n['#on'].events.change();await r('newGame();playback(session)');await r('press(sequence[0])');await r('playback(session)');assert.equal(r('score'),1);assert.equal(r('sequence.length'),2);assert(JSON.parse(store['simon-badges']).includes('first'));
+ await r('press((sequence[0]+1)%4)');await r('playback(session)');assert.equal(r('active'),true);assert.equal(r('mistakes'),1);
+ n['#strict'].checked=true;await r('press((sequence[0]+1)%4)');assert(n['#recap'].open);assert.equal(r('active'),false);
+ n['#mode'].value='daily';await r('newGame();playback(session)');const a=r('sequence[0]');await r('newGame();playback(session)');assert.equal(r('sequence[0]'),a);
+ n['#mode'].value='endless';await r('newGame();playback(session)');await r('sequence=Array(20).fill(0);position=19;enablePads(true);press(0)');await r('playback(session)');assert.equal(r('sequence.length'),21);assert.equal(r('active'),true);
+ n['#mode'].value='duo';r('newGame()');assert.equal(r('phase'),'add');await r('press(2)');assert.equal(r('player'),2);assert.equal(r('phase'),'handoff');n['#handoff'].events.click();await r('press(2)');assert.equal(r('phase'),'add');await r('press(1)');assert.equal(r('player'),1);assert.equal(r('sequence.join()'),'2,1');n['#handoff'].events.click();await r('press(0)');assert(n['#recap'].open);assert.equal(n['#result-title'].textContent,'Player 2 wins!');
+ n['#mode'].value='daily';n['#difficulty'].value='expert';await r('newGame();playback(session)');await r('sequence=Array(20).fill(0);position=19;enablePads(true);press(0)');assert.equal(n['#result-title'].textContent,'You did it!');assert(JSON.parse(store['simon-badges']).includes('daily'));
+ n['#on'].checked=false;n['#on'].events.change();assert(p.every(x=>x.disabled));assert.equal(r('accepting'),false);
+ console.log('PASS: classic retry, strict recap, score & badge persistence, daily repeatability, endless beyond 20, two-player pass/repeat/add/loss, daily victory, power off.');
+})().catch(e=>{console.error(e);process.exitCode=1});
